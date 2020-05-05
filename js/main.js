@@ -58,25 +58,19 @@ function notAuthorized() {
   function logIn(e){
     e.preventDefault();
 
-    function checkModalInput(){
-      if (logInInput.value == '') {
-        logInInput.style.borderColor = "red";
-        buttonInModalLogin.setAttribute("disable")
-      } else {
-        logInInput.style.borderColor = "";
-        buttonInModalLogin.removeAttribute("disable")
+      if (logInInput.value.trim()) {
+        login = logInInput.value;
+        localStorage.setItem('deliveryLogin', login);
+        toggleModalAuth();
+        buttonAuth.removeEventListener('click', toggleModalAuth);
+        closeAuth.removeEventListener('click', toggleModalAuth);
+        logInForm.removeEventListener('submit', logIn);
+        logInForm.reset();
+        checkAuth();
+      }  else {
+        logInInput.style.borderColor = "red"
       }
-    }
-    logInInput.oninput = checkModalInput()
 
-    login = logInInput.value;
-    localStorage.setItem('deliveryLogin', login);
-    toggleModalAuth();
-    buttonAuth.removeEventListener('click', toggleModalAuth);
-    closeAuth.removeEventListener('click', toggleModalAuth);
-    logInForm.removeEventListener('submit', logIn);
-    logInForm.reset();
-    checkAuth();
   }
 
   buttonAuth.addEventListener('click', toggleModalAuth);
