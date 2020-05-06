@@ -65,6 +65,7 @@ function notAuthorized() {
         toggleModalAuth();
         buttonAuth.removeEventListener('click', toggleModalAuth);
         closeAuth.removeEventListener('click', toggleModalAuth);
+        // modalAuth.removeEventListener("click", toggleModalAuth);
         logInForm.removeEventListener('submit', logIn);
         logInForm.reset();
         checkAuth();
@@ -75,6 +76,7 @@ function notAuthorized() {
 
   buttonAuth.addEventListener('click', toggleModalAuth);
   closeAuth.addEventListener('click', toggleModalAuth);
+  // modalAuth.addEventListener("click", toggleModalAuth);
   logInForm.addEventListener('submit', logIn);
 }
 
@@ -139,16 +141,19 @@ function createCardGood() {
 
 // ф. сокрытия карточек ресторана и показа карточек товаров определенного ресторана
 function openGoods(e) {
-  const target = e.target;
-  const restaurant = target.closest('.card-restaurant');
-  if (restaurant) {
-    cardsMenu.textContent = '';
-    containerPromo.classList.add('hide');
-    restaurants.classList.add('hide');
-    menu.classList.remove('hide');
-    createCardGood();
-  }  
-  
+  if (login) {
+    const target = e.target;
+    const restaurant = target.closest('.card-restaurant');
+    if (restaurant) {
+      cardsMenu.textContent = '';
+      containerPromo.classList.add('hide');
+      restaurants.classList.add('hide');
+      menu.classList.remove('hide');
+      createCardGood();
+    }  
+  } else {
+    toggleModalAuth()
+  }
 }
 
 // первый вызов ф. создания карточки ресторана
@@ -157,10 +162,11 @@ createCardRestaurant();
 // первый вызов ф. проверки авторизации
 checkAuth(); 
 
+// Показать модальное окно
 cartButton.addEventListener("click", toggleModal);
-
+// Закрыть модальное окно
 close.addEventListener("click", toggleModal);
-
+// Вызов OpenGoods при клике на карточки ресторанов
 cardsRestaurants.addEventListener('click', openGoods);
 // Возврат к начальной странице по клику на лого
 logo.addEventListener('click', function(){
