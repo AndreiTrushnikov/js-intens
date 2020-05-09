@@ -26,6 +26,11 @@ const subMenuStars = document.querySelector('.rating');
 const subMenuPrice = document.querySelector('.price');
 const subMenuNameCategory = document.querySelector('.category')
 
+// basket
+const cart = []; 
+const modalBody = document.querySelector('.modal-body');
+const modalPriceTag = document.querySelector('.modal-pricetag');
+const buttonClearCart = document.querySelector('.clear-cart')
 // Ajax Await
 const getData = async function(url) {
   const response = await fetch(url);
@@ -55,8 +60,10 @@ function authorized() {
     buttonAuth.style.display = "";
     userName.style.display = "";
     buttonOut.style.display = "";
+    cartButton.style.display = ""
     buttonOut.removeEventListener('click', toggleModalAuth);
     checkAuth();
+    returnMain();
   };
 
   // отрисовываем на странице имя пользователя
@@ -65,7 +72,8 @@ function authorized() {
   // скрываем кнопку Войти, показываем кнопку Выйти и Имя пользователя
   buttonAuth.style.display = "none";
   userName.style.display = "inline";
-  buttonOut.style.display = "block";
+  buttonOut.style.display = "flex";
+  cartButton.style.display = "flex";
   buttonOut.addEventListener('click', logOut);
 };
 
@@ -156,11 +164,11 @@ function createCardGood(goods) {
           </div>
         </div>
         <div class="card-buttons">
-          <button class="button button-primary button-add-cart">
+          <button class="button button-primary button-add-cart" id="${id}">
             <span class="button-card-text">В корзину</span>
             <span class="button-cart-svg"></span>
           </button>
-          <strong class="card-price-bold">${price} ₽</strong>
+          <strong class="card-price card-price-bold">${price} ₽</strong>
         </div>
       </div>
   `);
@@ -174,7 +182,12 @@ function createCardGood(goods) {
 // subMenuPrice 
 // subMenuNameCategory
 // }
-
+// ф. сброса страницы к первоначальному виду 
+function returnMain() {
+  containerPromo.classList.remove('hide');
+  restaurants.classList.remove('hide');
+  menu.classList.add('hide');
+}
 // ф. сокрытия карточек ресторана и показа карточек товаров определенного ресторана
 function openGoods(e) {
   if (login) {
@@ -197,6 +210,82 @@ function openGoods(e) {
   }
 };
 
+// ф. добавления в корзину
+function addToCart(e) {
+  const target = e.target;
+  const buttonAddToCart = target.closest('.button-add-cart');
+  if (buttonAddToCart) {
+    const card = target.closest('.card');
+    const title = card.querySelector('.card-title').textContent;
+    const price = card.querySelector('.card-price').textContent;
+    const id = buttonAddToCart.id;
+    
+    // проверка на повторное добавление товара
+    const food = cart.find(function(item){
+      return item.id === id
+    })
+    
+    if (food) {
+      food.count += 1;
+    } else {
+      cart.push({
+        id,
+        title,
+        price,
+        count: 1
+      })
+    }    
+  }
+}
+
+// ф. отрисовки корзины
+function renderCart() {
+  modalBody.textContent = '';
+
+  cart.forEach(function(item){
+    const { id, title, price, count } = item;
+    const itemCart = `
+      <div class="food-row">
+        <span class="food-name">${title}</span>
+        <strong class="food-price">${price}</strong>
+        <div class="food-counter">
+          <button class="counter-button counter-minus" data-id=${id}>-</button>
+          <span class="counter">${count}</span>
+          <button class="counter-button counter-plus" data-id=${id}>+</button>
+        </div>
+      </div>
+    `;
+    modalBody.insertAdjacentHTML('afterbegin', itemCart)
+  });
+
+  // нахождение суммы всех товаров
+  const totalPrice = cart.reduce(function(result, item){ 
+    return result + (parseFloat(item.price) * item.count); 
+  }, 0);
+
+  modalPriceTag.textContent = totalPrice + ' ₽';
+}
+
+// ф. изменения количества товаров при нажатии на кнопки +/-
+function changeCount(e) {
+  const target = e.target;
+
+  if (target.classList.contains('counter-button')) {
+    const food = cart.find(function(item) {
+      return item.id === target.dataset.id;
+    });
+    if (target.classList.contains('counter-minus')) {
+      food.count--;
+      if (food.count == 0) {
+        cart.splice(cart.indexOf('food'), 1);
+      }
+    }
+    if (target.classList.contains('counter-plus'))  food.count++;
+    renderCart();
+  }
+}
+
+// ф. инициализации всего сайта
 function init () {
   // первый вызов ф. проверки авторизации
   checkAuth(); 
@@ -204,19 +293,26 @@ function init () {
   getData('./db/partners.json').then(function(data){
     data.forEach(createCardRestaurant)
   }); 
-
+  // 
+  buttonClearCart.addEventListener('click', function(){
+    cart.length = 0;
+    renderCart();
+  })
+  // Навешиваем функции +/- товаров в корзине
+  modalBody.addEventListener('click', changeCount);
+  // Добавляем товар в корзину
+  cardsMenu.addEventListener('click', addToCart);
   // Показать модальное окно
-  cartButton.addEventListener("click", toggleModal);
+  cartButton.addEventListener("click", function() {
+    renderCart();
+    toggleModal();
+  });
   // Закрыть модальное окно
   close.addEventListener("click", toggleModal);
   // Вызов OpenGoods при клике на карточки ресторанов
   cardsRestaurants.addEventListener('click', openGoods);
   // Возврат к начальной странице по клику на лого
-  logo.addEventListener('click', function(){
-    containerPromo.classList.remove('hide');
-    restaurants.classList.remove('hide');
-    menu.classList.add('hide');
-  });
+  logo.addEventListener('click', returnMain());
 }
 
 init();
